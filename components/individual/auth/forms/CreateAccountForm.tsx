@@ -9,9 +9,37 @@ import { Buttons } from '@components/global/primitives/Buttons'
 import Link from 'next/link'
 import { FormMaster } from '@components/global/forms/FormMaster'
 import { useRouter } from 'next/router'
+import { defaultResponseProperties } from '@typed/global'
+import { AuthenticationStore } from '@state/AuthState'
+import { Logger } from '@utils/Logger'
+import RequestManager from '@utils/RequestManager'
+import { reusableAsyncToast } from '@utils/ReusableAsyncToast'
+
+//response types
+type registrationResponse = {
+  data: {
+    id: number
+    fullName: string
+    email: string
+    phone: string
+    photo: string
+    coverPhoto: string
+    location: string
+    summary: string
+    isEmailVerified: boolean
+    isAnOrganization: boolean
+    isPhoneVerified: boolean
+  }
+  meta: {
+    accessToken: string
+  }
+} & defaultResponseProperties
 
 export const CreateAccountForm = (): JSX.Element => {
   const router = useRouter()
+
+  //state
+  const [updateLiu, updateAuthToken] = AuthenticationStore((state) => [state.updateLiu, state.updateAuthToken])
 
   //functions
   const CreateAccountFormValidationSchema = z.object({
@@ -21,10 +49,38 @@ export const CreateAccountForm = (): JSX.Element => {
     isOrganization: z.boolean()
   })
 
-  const onSubmit = (data: z.infer<typeof CreateAccountFormValidationSchema>) => {
+  const onSubmit = async (data: z.infer<typeof CreateAccountFormValidationSchema>) => {
     console.log('form submitted:', data)
-    router.push('/registration/add-phone-number').then()
+    const registrationUrl = '/api/v1/auth/signup'
+
+    const body = {
+      fullName: data.name,
+      email: data.email,
+      isAnOrganization: data.isOrganization,
+      password: data.password
+    }
+
+    try {
+      const request = RequestManager.makeRequest<registrationResponse>(registrationUrl, 'post', body, { unAuthenticated: true })
+
+      //setup async toast
+      await reusableAsyncToast(request)
+
+      const response = await request
+
+      //set user in state
+      updateLiu({ ...response.data })
+
+      //set token in state
+      updateAuthToken(response.meta.accessToken)
+
+      //push to add phone number page
+      await router.push('/registration/add-phone-number')
+    } catch (e) {
+      Logger('error create account form:', e)
+    }
   }
+
   return (
     <FormMaster
       onSubmitHandler={onSubmit}

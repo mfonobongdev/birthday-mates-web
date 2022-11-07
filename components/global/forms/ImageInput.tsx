@@ -37,6 +37,7 @@ export const ImageInput = ({ name, maxNumberOfImages = 1 }: ImageInputProps): JS
               <div className={'grid place-items-center'}>
                 <div className='relative h-[120px] w-[120px] rounded-full bg-[#c4c4c4]'>
                   <button
+                    type={'button'}
                     className={'absolute right-0 bottom-0 z-20 rounded-full bg-black p-1'}
                     style={isDragging ? { color: 'teal' } : undefined}
                     onClick={onImageUpload}
@@ -57,7 +58,10 @@ export const ImageInput = ({ name, maxNumberOfImages = 1 }: ImageInputProps): JS
                         )}
                       </div>
 
-                      <button className={'absolute right-0 bottom-0 z-30 rounded-full bg-black p-1'} onClick={() => onImageUpdate(index)}>
+                      <button
+                        type={'button'}
+                        className={'absolute right-0 bottom-0 z-30 rounded-full bg-black p-1'}
+                        onClick={() => onImageUpdate(index)}>
                         <FormIcons.UploadImage />
                       </button>
                     </div>

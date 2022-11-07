@@ -16,6 +16,9 @@
       "@util/*": [
         "util/*"
       ],
+      "@utils/*": [
+        "utils/*"
+      ],
       "@styles/*": [
         "styles/*"
       ],

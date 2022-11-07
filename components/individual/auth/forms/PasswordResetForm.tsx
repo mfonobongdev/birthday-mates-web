@@ -6,6 +6,11 @@ import { FormIcons } from '@components/global/icons/FormIcons'
 import { Buttons } from '@components/global/primitives/Buttons'
 import { FormMaster } from '@components/global/forms/FormMaster'
 import { useRouter } from 'next/router'
+import RequestManager from '@utils/RequestManager'
+import { defaultResponseProperties } from '@typed/global'
+import { Logger } from '@utils/Logger'
+import React from 'react'
+import { reusableAsyncToast } from '@utils/ReusableAsyncToast'
 
 export const PasswordResetForm = (): JSX.Element => {
   const router = useRouter()
@@ -15,9 +20,26 @@ export const PasswordResetForm = (): JSX.Element => {
     email: z.string().email()
   })
 
-  const onSubmit = (data: z.infer<typeof PasswordResetFormValidationSchema>) => {
-    console.log('form submitted:', data)
-    router.push('/password-reset/verify-code').then()
+  const onSubmit = async (data: z.infer<typeof PasswordResetFormValidationSchema>) => {
+    const body = {
+      email: data.email
+    }
+
+    const resetPasswordUrl = `/api/v1/auth/reset-password`
+    try {
+      const request = RequestManager.makeRequest<defaultResponseProperties>(resetPasswordUrl, 'post', body, { unAuthenticated: true })
+
+      //setup async toast
+      await reusableAsyncToast(request, 'Checking...', 'Sent verification code!')
+
+      const response = await request
+
+      if (response.code === 200) {
+        await router.push('/password-reset/verify-code')
+      }
+    } catch (e) {
+      Logger('error password reset form:', e)
+    }
   }
   return (
     <FormMaster onSubmitHandler={onSubmit} validationSchema={PasswordResetFormValidationSchema} className={'items-center justify-center'}>

@@ -19,6 +19,7 @@ module.exports = {
           ['@lib', './lib/'],
           ['@api', './api/'],
           ['@util', './util/'],
+          ['@utils', './utils/'],
           ['@styles', './styles/'],
           ['@typed', './typed/'],
           ['@hooks', './hooks/'],

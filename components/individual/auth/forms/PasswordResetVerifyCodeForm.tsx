@@ -5,18 +5,46 @@ import { Buttons } from '@components/global/primitives/Buttons'
 import { FormMaster } from '@components/global/forms/FormMaster'
 import { OTPInput } from '@components/global/forms/OTPInput'
 import { useRouter } from 'next/router'
+import RequestManager from '@utils/RequestManager'
+import { defaultResponseProperties } from '@typed/global'
+import { Logger } from '@utils/Logger'
+import React from 'react'
+import { AuthenticationStore } from '@state/AuthState'
+import { reusableAsyncToast } from '@utils/ReusableAsyncToast'
 
 export const PasswordResetVerifyCodeForm = (): JSX.Element => {
   const router = useRouter()
+
+  //state
+  const [liu] = AuthenticationStore((state) => [state.liu])
 
   //functions
   const PasswordResetVerifyCodeFormValidationSchema = z.object({
     code: z.string().min(6).max(6)
   })
 
-  const onSubmit = (data: z.infer<typeof PasswordResetVerifyCodeFormValidationSchema>) => {
+  const onSubmit = async (data: z.infer<typeof PasswordResetVerifyCodeFormValidationSchema>) => {
     console.log('form submitted:', data)
-    router.push('/password-reset/new-password').then()
+    const body = {
+      verificationCode: data.code,
+      userId: liu?.id || 0
+    }
+
+    const verifyEmailUrl = `/api/v1/auth/verify-email`
+    try {
+      const request = RequestManager.makeRequest<defaultResponseProperties>(verifyEmailUrl, 'post', body, { unAuthenticated: true })
+
+      //setup async toast
+      await reusableAsyncToast(request, 'Checking...', 'Verification successful!')
+
+      const response = await request
+
+      if (response.code === 200) {
+        await router.push('/password-reset/new-password')
+      }
+    } catch (e) {
+      Logger('error verify code form:', e)
+    }
   }
   return (
     <FormMaster

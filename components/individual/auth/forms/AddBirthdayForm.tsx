@@ -8,12 +8,18 @@ import { FormMaster } from '@components/global/forms/FormMaster'
 import { DateInput } from '@components/global/forms/DateInput'
 import validator from 'validator'
 import { useRouter } from 'next/router'
+import { defaultResponseProperties } from '@typed/global'
+import { Logger } from '@utils/Logger'
+import { AuthenticationStore } from '@state/AuthState'
+import RequestManager from '@utils/RequestManager'
+import { reusableAsyncToast } from '@utils/ReusableAsyncToast'
 // import { DateTime, Interval } from 'luxon'
 
 export const AddBirthdayForm = (): JSX.Element => {
   const router = useRouter()
 
   //state
+  const [liu] = AuthenticationStore((state) => [state.liu])
 
   //functions
   // const validateAge = (date: string) => {
@@ -32,10 +38,28 @@ export const AddBirthdayForm = (): JSX.Element => {
     // })
   })
 
-  const onSubmit = (data: z.infer<typeof BirthdayFormValidationSchema>) => {
-    console.log('form submitted:', data)
-    router.push('/password-reset').then()
+  const onSubmit = async (data: z.infer<typeof BirthdayFormValidationSchema>) => {
+    const body = {
+      birthDate: data.birthday
+    }
+
+    const addBirthdayUrl = `/api/v1/users/${liu?.id || 0}/birthday`
+    try {
+      const request = RequestManager.makeRequest<defaultResponseProperties>(addBirthdayUrl, 'patch', body)
+
+      //setup async toast
+      await reusableAsyncToast(request)
+
+      const response = await request
+
+      if (response.code === 200) {
+        await router.push('/registration/add-profile-image')
+      }
+    } catch (e) {
+      Logger('error birthday form:', e)
+    }
   }
+
   return (
     <FormMaster onSubmitHandler={onSubmit} validationSchema={BirthdayFormValidationSchema} className={'items-center justify-center'}>
       <CardWrapper

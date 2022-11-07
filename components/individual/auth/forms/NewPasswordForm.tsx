@@ -6,9 +6,18 @@ import { FormIcons } from '@components/global/icons/FormIcons'
 import { Buttons } from '@components/global/primitives/Buttons'
 import { FormMaster } from '@components/global/forms/FormMaster'
 import { useRouter } from 'next/router'
+import RequestManager from '@utils/RequestManager'
+import { defaultResponseProperties } from '@typed/global'
+import { Logger } from '@utils/Logger'
+import React from 'react'
+import { AuthenticationStore } from '@state/AuthState'
+import { reusableAsyncToast } from '@utils/ReusableAsyncToast'
 
 export const NewPasswordForm = (): JSX.Element => {
   const router = useRouter()
+
+  //state
+  const [liu] = AuthenticationStore((state) => [state.liu])
 
   //functions
   const PasswordResetFormValidationSchema = z
@@ -26,9 +35,31 @@ export const NewPasswordForm = (): JSX.Element => {
       }
     })
 
-  const onSubmit = (data: z.infer<typeof PasswordResetFormValidationSchema>) => {
+  const onSubmit = async (data: z.infer<typeof PasswordResetFormValidationSchema>) => {
     console.log('form submitted:', data)
-    router.push('/login').then()
+
+    const body = {
+      password: data.confirmPassword,
+      newPassword: data.newPassword,
+      fromResetPassword: true
+    }
+
+    const changePasswordUrl = `/api/v1/users/${liu?.id || 0}/change-password`
+
+    try {
+      const request = RequestManager.makeRequest<defaultResponseProperties>(changePasswordUrl, 'patch', body)
+
+      //setup async toast
+      await reusableAsyncToast(request)
+
+      const response = await request
+
+      if (response.code === 200) {
+        await router.push('/login')
+      }
+    } catch (e) {
+      Logger('error new password form:', e)
+    }
   }
   return (
     <FormMaster onSubmitHandler={onSubmit} validationSchema={PasswordResetFormValidationSchema} className={'items-center justify-center'}>

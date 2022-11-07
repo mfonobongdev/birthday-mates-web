@@ -1,20 +1,22 @@
 import { Typography } from '@components/global/primitives/Typography'
-import { websiteNavValuesAtom, WebsiteNavValuesEnum } from '@state/WebsiteNavBarState'
+import { NavigationStore, WebsiteNavValuesEnum } from '@state/NavigationState'
 import cx from 'clsx'
 import { useRouter } from 'next/router'
-import { useAtom } from 'jotai'
 import React from 'react'
 
 export const WebsiteNavBar = ({ initialValue }: { initialValue?: WebsiteNavValuesEnum }): JSX.Element => {
   const router = useRouter()
   //state
-  const [navValue, updateNavValue] = useAtom(websiteNavValuesAtom)
+  const [websiteNavSelectedLink, updateWebsiteNavSelectedLink] = NavigationStore((state) => [
+    state.websiteNavSelectedLink,
+    state.updateWebsiteNavSelectedLink
+  ])
 
   //functions
   const useSetInitialValue = () => {
     React.useEffect(() => {
       if (initialValue) {
-        updateNavValue(initialValue)
+        updateWebsiteNavSelectedLink(initialValue)
       }
     }, [])
   }
@@ -48,17 +50,17 @@ export const WebsiteNavBar = ({ initialValue }: { initialValue?: WebsiteNavValue
           <div
             key={`${key}${index}`}
             onClick={async () => {
-              updateNavValue(WebsiteNavValuesEnum[key])
+              updateWebsiteNavSelectedLink(WebsiteNavValuesEnum[key])
               await router.push(getLinkUrls(WebsiteNavValuesEnum[key]))
             }}
             className={cx('cursor-pointer rounded-b-[17px] px-[16px] pt-[41px] pb-[22px]', {
-              'bg-transparent': navValue !== key,
-              'bg-app-purple': navValue === key
+              'bg-transparent': websiteNavSelectedLink !== key,
+              'bg-app-purple': websiteNavSelectedLink === key
             })}>
             <Typography.TitleOne
               className={cx('', {
-                'text-app-purple': navValue !== key,
-                'bg-app-purple text-white': navValue === key
+                'text-app-purple': websiteNavSelectedLink !== key,
+                'bg-app-purple text-white': websiteNavSelectedLink === key
               })}>
               {WebsiteNavValuesEnum[key]}
             </Typography.TitleOne>

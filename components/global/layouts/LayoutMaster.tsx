@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import appBackground from '/public/assets/background.png'
 import { Typography } from '@components/global/primitives/Typography'
+import Link from 'next/link'
 
 type LayoutProps = { withNavbar?: boolean } & JSX.IntrinsicElements['main']
 
@@ -13,12 +14,15 @@ export const LayoutMaster = ({ withNavbar = true, children }: LayoutProps): JSX.
       </div>
 
       {/*navigation bar || title section*/}
-
       {withNavbar ? (
         <div>TODO: Navbar</div>
       ) : (
-        <div className={'container'}>
-          <Typography.Logo className={'relative top-10 left-0 -z-10 max-w-max text-logo-purple'}>Birthday Mates</Typography.Logo>
+        <div className={'container fixed top-0 left-0 right-0 z-50 py-10'}>
+          <Link href='/'>
+            <a>
+              <Typography.Logo className={'max-w-max text-logo-purple'}>Birthday Mates</Typography.Logo>
+            </a>
+          </Link>
         </div>
       )}
 
